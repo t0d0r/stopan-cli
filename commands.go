@@ -157,14 +157,28 @@ view chooses it ('stopan list all'); the other words search the subject
 and text, or find a ticket number. To search for a view's name, use
 --search ('stopan list --search done').
 
-Views for staff: unsolved (default), mine, unassigned, pending,
-postponed, done, all. For requesters: open (default), done, all.
+Views for staff:
+  unsolved    new, open and pending tickets (the default)
+  mine        unsolved and assigned to you
+  unassigned  unsolved and assigned to nobody
+  pending     waiting for the requester
+  postponed   parked for later, not worked on now
+  done        finished
+  all         every ticket
+Views for requesters ("My tickets", only your own tickets):
+  open (the default), done, all
+
+Examples:
+  stopan list mine            your tickets
+  stopan list all printer     search all tickets
+  stopan list --search done   search for the word "done"
+
 Statuses: new, open, pending, postponed, done.
 Priorities (staff): low, normal, high, urgent.
 Assignee (staff): me, none, or a user id.`,
 		permute: true,
 		setup: func(f *flagDefs) action {
-			view := f.String("v", "view", "VIEW", "", "queue view")
+			view := f.String("v", "view", "VIEW", "", "unsolved, mine, unassigned, pending, postponed, done or all")
 			search := f.String("q", "search", "TEXT", "", "search the subject and text, or find a number")
 			status := f.String("s", "status", "STATUS", "", "only this status")
 			prio := f.String("p", "priority", "PRIORITY", "", "only this priority")

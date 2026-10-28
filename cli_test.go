@@ -183,6 +183,14 @@ func TestErrorsAndUsage(t *testing.T) {
 	if code, out, _ := runCLI(t, "", "help", "reply"); code != 0 || !strings.Contains(out, "Usage: stopan reply") {
 		t.Errorf("help reply: %q", out)
 	}
+	for _, args := range [][]string{{"--help"}, {"help", "list"}, {"list", "--help"}} {
+		_, out, _ := runCLI(t, "", args...)
+		for _, v := range []string{"unsolved", "mine", "unassigned", "pending", "postponed", "done", "all"} {
+			if !strings.Contains(out, v) {
+				t.Errorf("%v does not name the view %s", args, v)
+			}
+		}
+	}
 }
 
 func TestLoginLogout(t *testing.T) {

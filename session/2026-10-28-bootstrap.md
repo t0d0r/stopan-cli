@@ -96,3 +96,31 @@ packaging/homebrew/stopan-cli.rb and the tap (specs/release.md, Steps
   pages, `list postponed` 9.
 - The v0.1.0 tag was not published yet, so it moves to the commit with
   this change and the release files are built again.
+
+## Release v0.1.0 (published)
+
+- The tag v0.1.0 moved to f9e7538 (with `list VIEW`) before anything was
+  published; release files built again on it.
+- Public repository t0d0r/stopan-cli created; main and v0.1.0 pushed;
+  gitleaks: no leaks. GitHub release v0.1.0 with four tarballs, two
+  .deb files and SHA256SUMS; all six pass the checksum check after
+  download. `stopan update --check` finds v0.1.0 through the redirect.
+- Homebrew: formula stopan-cli added to t0d0r/homebrew-tap (source
+  archive sha256 e1ee2d19313b316101ba566d362e49ac94a803a2c5eadfd339e34ccaf7b09364),
+  also in packaging/homebrew/stopan-cli.rb. brew style and audit
+  --strict pass; brew install --build-from-source and brew test pass;
+  the installed stopan 0.1.0 reports itself up to date. This Homebrew
+  version needs `brew trust --formula t0d0r/tap/stopan-cli` before it
+  loads a formula from the tap.
+
+## Views in the help
+
+- `stopan --help` has a VIEW paragraph; `stopan help list` lists each
+  view with its meaning (wording from ../stopan/specs/tickets.md), the
+  requester views and examples; `--view` names the views. Only the
+  tickets assigned to you: `stopan list mine`.
+- Test: the three help outputs name all seven staff views.
+- On main after v0.1.0; goes out with the next release.
+
+Next step: release v0.1.1 with the help change when wanted; then check
+`stopan update` through brew and the binary method from 0.1.0.

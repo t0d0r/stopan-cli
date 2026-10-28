@@ -136,6 +136,10 @@ Options:
 
 TICKET is a ticket number, with or without '#'.
 
+VIEW (for list) is unsolved (the default), mine (assigned to you),
+unassigned, pending, postponed, done or all; requesters have open, done
+and all. Example: 'stopan list mine'.
+
 Start with 'stopan login': make a token on the account page of the
 Stopan site ("API tokens") and paste it when asked. STOPAN_URL and
 STOPAN_TOKEN override the saved server and token.

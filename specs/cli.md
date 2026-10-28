@@ -49,6 +49,11 @@ search for a view's name, use `-q/--search TEXT`, which is joined in
 front of the remaining words. A view the user does not have is left to
 the server, which then uses its default view.
 
+`stopan --help` names the views in a VIEW paragraph; `stopan help list`
+lists each view with what it holds, the requester views and examples
+(`stopan list mine` for the tickets assigned to you); the `--view`
+option's help names the staff views.
+
 Decision: a view as a plain word, not only `-v`. Reason: switching views
 is the most common use of `list`; `-v` stays for scripts.
 
