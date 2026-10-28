@@ -82,7 +82,17 @@ func setup(t *testing.T) *fake {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	t.Setenv("STOPAN_URL", ts.URL)
 	t.Setenv("STOPAN_TOKEN", "stopan_test")
+	t.Setenv("STOPAN_PROFILE", "")
 	return f
+}
+
+// newFake starts another fake server and returns its URL.
+func newFake(t *testing.T) (*fake, string) {
+	t.Helper()
+	f := &fake{body: map[string]string{}}
+	ts := httptest.NewServer(f)
+	t.Cleanup(ts.Close)
+	return f, ts.URL
 }
 
 func runCLI(t *testing.T, stdin string, args ...string) (int, string, string) {
@@ -199,7 +209,7 @@ func TestLoginLogout(t *testing.T) {
 	t.Setenv("STOPAN_URL", "")
 	t.Setenv("STOPAN_TOKEN", "")
 	code, out, errs := runCLI(t, "stopan_test\n", "login", "--url", url, "--token-stdin")
-	if code != 0 || !strings.Contains(out, "as Ben (agent)") {
+	if code != 0 || !strings.Contains(out, "as Ben (agent); profile default") {
 		t.Fatalf("login: %d %q %q", code, out, errs)
 	}
 	p := filepath.Join(os.Getenv("XDG_CONFIG_HOME"), "stopan", "config.json")
@@ -233,5 +243,81 @@ func TestNotifications(t *testing.T) {
 	}
 	if code, _, _ := runCLI(t, "", "read", "--all"); code != 0 {
 		t.Errorf("read --all: %d", code)
+	}
+}
+
+func TestProfiles(t *testing.T) {
+	setup(t)
+	t.Setenv("STOPAN_URL", "")
+	t.Setenv("STOPAN_TOKEN", "")
+	prod, prodURL := newFake(t)
+	dev, devURL := newFake(t)
+
+	if code, out, _ := runCLI(t, "", "profiles"); code != 0 || !strings.Contains(out, "no profiles") {
+		t.Errorf("no profiles: %q", out)
+	}
+	if code, _, errs := runCLI(t, "", "list"); code != 1 || !strings.Contains(errs, "not logged in") {
+		t.Errorf("list before login: %d %q", code, errs)
+	}
+	if code, _, errs := runCLI(t, "stopan_test\n", "login", "-P", "prod", "--url", prodURL, "--token-stdin"); code != 0 {
+		t.Fatalf("login prod: %q", errs)
+	}
+	if code, out, errs := runCLI(t, "stopan_test\n", "-P", "dev", "login", "--url", devURL, "--token-stdin"); code != 0 || !strings.Contains(out, "profile dev") {
+		t.Fatalf("login dev: %q %q", out, errs)
+	}
+	code, out, _ := runCLI(t, "", "profiles")
+	if code != 0 || !strings.Contains(out, "*  dev ") || !strings.Contains(out, "   prod ") || !strings.Contains(out, "Ben (agent)") {
+		t.Errorf("profiles:\n%s", out)
+	}
+
+	// The last login is current; -P before or after the command picks another.
+	count := func(f *fake) int { f.mu.Lock(); defer f.mu.Unlock(); return len(f.reqs) }
+	p0, d0 := count(prod), count(dev)
+	runCLI(t, "", "list")
+	runCLI(t, "", "-P", "prod", "list")
+	runCLI(t, "", "list", "all", "--profile", "prod")
+	runCLI(t, "", "--profile=prod", "me")
+	if count(dev)-d0 != 1 || count(prod)-p0 != 3 {
+		t.Errorf("requests: dev %d, prod %d", count(dev)-d0, count(prod)-p0)
+	}
+	if code, out, _ := runCLI(t, "", "use", "prod"); code != 0 || !strings.Contains(out, "now using profile prod") {
+		t.Errorf("use: %q", out)
+	}
+	runCLI(t, "", "list")
+	if count(prod)-p0 != 4 {
+		t.Error("use prod did not switch")
+	}
+	t.Setenv("STOPAN_PROFILE", "dev")
+	runCLI(t, "", "list")
+	if count(dev)-d0 != 2 {
+		t.Error("STOPAN_PROFILE did not choose dev")
+	}
+	t.Setenv("STOPAN_PROFILE", "")
+
+	for _, args := range [][]string{{"use", "nope"}, {"-P", "nope", "list"}, {"logout", "-P", "nope"}} {
+		if code, _, errs := runCLI(t, "", args...); code != 1 || !strings.Contains(errs, `profile "nope"`) {
+			t.Errorf("%v: %d %q", args, code, errs)
+		}
+	}
+	for _, args := range [][]string{{"-P", "../x", "list"}, {"list", "-P", "a b"}, {"-P"}} {
+		if code, _, _ := runCLI(t, "", args...); code != 2 {
+			t.Errorf("%v: exit %d, want 2", args, code)
+		}
+	}
+
+	if code, out, _ := runCLI(t, "", "logout", "-P", "dev"); code != 0 || !strings.Contains(out, "removed the token of profile dev") {
+		t.Errorf("logout dev: %q", out)
+	}
+	if code, _, errs := runCLI(t, "", "-P", "dev", "list"); code != 1 || !strings.Contains(errs, "profile dev: no token") {
+		t.Errorf("dev without token: %d %q", code, errs)
+	}
+	if code, out, _ := runCLI(t, "", "logout", "--forget"); code != 0 || !strings.Contains(out, "removed profile prod") || !strings.Contains(out, "current profile: dev") {
+		t.Errorf("forget prod: %q", out)
+	}
+	if _, out, _ := runCLI(t, "", "profiles"); strings.Contains(out, "prod") || !strings.Contains(out, "dev") {
+		t.Errorf("after forget:\n%s", out)
+	}
+	if _, out, _ := runCLI(t, "", "help", "list"); !strings.Contains(out, "-P, --profile NAME") {
+		t.Error("help list does not show -P")
 	}
 }

@@ -24,6 +24,7 @@ import (
 // Options are the dashboard's settings from the command line.
 type Options struct {
 	Refresh time.Duration // 0: no automatic reload
+	Profile string        // shown in the header
 }
 
 // Run starts the dashboard and returns when it quits.
@@ -674,6 +675,9 @@ func (m model) View() string {
 
 func (m model) header() string {
 	left := titleSt.Render("stopan")
+	if m.opts.Profile != "" {
+		left += faintSt.Render(" [" + m.opts.Profile + "]")
+	}
 	if m.me != nil {
 		left += faintSt.Render(" " + m.me.Name + " @ " + m.c.Base[strings.Index(m.c.Base, "://")+3:])
 	}
@@ -703,7 +707,11 @@ func (m model) header() string {
 	room := m.width - lipgloss.Width(right) - 1
 	line := left + "  " + mid
 	if lipgloss.Width(line) > room {
-		line = titleSt.Render("stopan") + "  " + mid
+		line = titleSt.Render("stopan")
+		if m.opts.Profile != "" {
+			line += faintSt.Render(" [" + m.opts.Profile + "]")
+		}
+		line += "  " + mid
 	}
 	if lipgloss.Width(line) > room {
 		line = ansi.Truncate(line, max(room, 0), "")

@@ -13,6 +13,12 @@ error), 2 usage error (`stopan CMD: MESSAGE` and
 
 TICKET is a ticket number, with or without `#` (`1001`, `#1001`).
 
+Every command takes `-P/--profile NAME`, also before the command
+(`stopan -P dev list`, `stopan list -P dev`, `--profile=dev`), to use
+that profile instead of the current one (auth.md "Profiles"). A bad
+name is a usage error (exit 2); a profile that does not exist fails with
+exit 1.
+
 Every command that reads takes `-j/--json` and then prints the API's
 answer, indented, instead of the table.
 
@@ -23,7 +29,9 @@ API errors print `stopan: CODE: MESSAGE`, with validation details
 |---|---|---|---|
 | `tui` | | | dashboard; `-r/--refresh DURATION` (default 1m, 0 off) |
 | `login` | | `GET /me` | auth.md |
-| `logout` | | `GET /tokens`, `DELETE /tokens/:id` | auth.md |
+| `logout` | | `GET /tokens`, `DELETE /tokens/:id` | auth.md; `--forget` removes the profile |
+| `profiles` | | | list the profiles, `*` on the one in use (auth.md) |
+| `use NAME` | | | make a profile current (auth.md) |
 | `me` | `whoami` | `GET /me` | server, user, username, email, role, language, organizations |
 | `list [VIEW] [SEARCH...]` | `ls`, `tickets` | `GET /tickets` | see below |
 | `show TICKET` | `view`, `cat` | `GET /tickets/:n` | fields, request text, timeline |

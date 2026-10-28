@@ -10,6 +10,8 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"stopan-cli/internal/config"
 )
 
 // version is set at build time with -ldflags "-X main.version=...".
@@ -22,6 +24,9 @@ type env struct {
 }
 
 type action func(e env, args []string) error
+
+// profile is the -P/--profile option, read by client, login and logout.
+var profile string
 
 type command struct {
 	name     string
@@ -40,6 +45,25 @@ func main() {
 // run executes one invocation and returns the exit status: 0 success,
 // 1 failure, 2 usage error.
 func run(args []string, e env) int {
+	profile = ""
+	// -P NAME before the command applies to it, as after it.
+	for len(args) > 0 && (args[0] == "-P" || args[0] == "--profile" || strings.HasPrefix(args[0], "--profile=")) {
+		if v, ok := strings.CutPrefix(args[0], "--profile="); ok {
+			profile, args = v, args[1:]
+			continue
+		}
+		if len(args) < 2 {
+			fmt.Fprintf(e.err, "stopan: %s needs a profile name\nRun 'stopan --help' for usage.\n", args[0])
+			return 2
+		}
+		profile, args = args[1], args[2:]
+	}
+	if profile != "" {
+		if err := config.ValidName(profile); err != nil {
+			fmt.Fprintf(e.err, "stopan: %v\n", err)
+			return 2
+		}
+	}
 	if len(args) > 0 {
 		switch args[0] {
 		case "-h", "-help", "--help":
@@ -75,7 +99,14 @@ func run(args []string, e env) int {
 	}
 	f := newFlagDefs(c.name)
 	act := c.setup(f)
+	prof := addProfileOption(f)
 	pos, err := f.parse(rest, c.permute)
+	if err == nil && *prof != "" {
+		if verr := config.ValidName(*prof); verr != nil {
+			err = usageError(verr.Error())
+		}
+		profile = *prof
+	}
 	if err == nil {
 		err = act(e, pos)
 	}
@@ -131,8 +162,9 @@ Commands:
   %-13s print the version
 
 Options:
-  -h, --help     show this help and exit
-  -V, --version  print the version and exit
+  -P, --profile NAME  use this profile (also after the command)
+  -h, --help          show this help and exit
+  -V, --version       print the version and exit
 
 TICKET is a ticket number, with or without '#'.
 
@@ -141,8 +173,10 @@ unassigned, pending, postponed, done or all; requesters have open, done
 and all. Example: 'stopan list mine'.
 
 Start with 'stopan login': make a token on the account page of the
-Stopan site ("API tokens") and paste it when asked. STOPAN_URL and
-STOPAN_TOKEN override the saved server and token.
+Stopan site ("API tokens") and paste it when asked. Several servers or
+accounts are profiles: 'stopan login -P dev', 'stopan profiles',
+'stopan use dev', 'stopan -P dev list'. STOPAN_PROFILE chooses a
+profile; STOPAN_URL and STOPAN_TOKEN override its server and token.
 
 Exit status: 0 on success, 1 on failure, 2 on a usage error.
 
@@ -161,5 +195,11 @@ func (c command) writeHelp(w io.Writer) {
 	}
 	f := newFlagDefs(c.name)
 	c.setup(f)
+	addProfileOption(f)
 	f.writeOptions(w)
+}
+
+// addProfileOption gives every command the -P/--profile option.
+func addProfileOption(f *flagDefs) *string {
+	return f.String("P", "profile", "NAME", "", "use this profile (see 'stopan profiles')")
 }

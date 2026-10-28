@@ -15,7 +15,8 @@ stopan Ben @ desk.example.org   1 unsolved  2 mine  3 unassigned ...   inbox 3
 page 1/3, 57 tickets, sort updated                                    ? help
 ```
 
-- Header: name, user and server (without the scheme), the view tabs
+- Header: name, the profile in brackets (`stopan [dev]`, auth.md
+  "Profiles"), user and server (without the scheme), the view tabs
   (staff: unsolved, mine, unassigned, pending, postponed, done, all;
   requesters: open, done, all, numbered 1 to 7), and the unread
   notification count on the right (`inbox N`, highlighted when N > 0).

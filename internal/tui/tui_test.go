@@ -130,6 +130,11 @@ func TestListAndViews(t *testing.T) {
 	if wide := step(t, m, tea.WindowSizeMsg{Width: 160, Height: 20}).View(); !strings.Contains(wide, "Ben @ 127.0.0.1") {
 		t.Errorf("a wide header names the user and server:\n%s", wide)
 	}
+	m.opts.Profile = "dev"
+	if v := m.View(); !strings.Contains(v, "stopan [dev]") || !strings.Contains(v, "inbox 1") {
+		t.Errorf("the header names the profile:\n%s", v)
+	}
+	m.opts.Profile = ""
 	m = step(t, m, key("tab"))
 	if m.views[m.view] != "mine" || !rc.has("view=mine") {
 		t.Errorf("tab should load the mine view, view=%d", m.view)

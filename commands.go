@@ -51,21 +51,24 @@ Replies and notes are written in $EDITOR (default vi).`,
 				if err := noArgs(args); err != nil {
 					return err
 				}
-				c, err := client()
+				c, name, err := connect()
 				if err != nil {
 					return err
 				}
-				return tui.Run(c, tui.Options{Refresh: *refresh})
+				return tui.Run(c, tui.Options{Refresh: *refresh, Profile: name})
 			}
 		},
 	},
 	{
 		name:     "login",
 		synopsis: "[OPTIONS]",
-		summary:  "save the server and a personal token",
+		summary:  "save a server and a personal token as a profile",
 		about: `
 Ask for the server URL and a personal API token, check them with the
-server, and save them in ~/.config/stopan/config.json (mode 0600).
+server, and save them in ~/.config/stopan/config.json (mode 0600) as a
+profile, which becomes the current one. The profile is the one named
+with -P (such as 'stopan login -P dev'), else the current one, else
+"default". Logging in to an existing profile replaces its token.
 
 Make the token on the Stopan site: account page, "API tokens". A
 read-only token is enough for list, show and notifications; replies and
@@ -89,19 +92,56 @@ the shell history.`,
 	{
 		name:     "logout",
 		synopsis: "[OPTIONS]",
-		summary:  "forget the saved token",
+		summary:  "forget a profile's token",
 		about: `
-Remove the token from the config file; the server URL stays. With
---revoke, first revoke the token on the server, so it stops working
-everywhere.`,
+Remove the token of the profile (the current one, or the one named with
+-P); its server URL stays, so the next login asks only for a token. With
+--forget, remove the whole profile. With --revoke, first revoke the
+token on the server, so it stops working everywhere.`,
 		permute: true,
 		setup: func(f *flagDefs) action {
 			revoke := f.Bool("", "revoke", "also revoke the token on the server")
+			forget := f.Bool("", "forget", "remove the whole profile")
 			return func(e env, args []string) error {
 				if err := noArgs(args); err != nil {
 					return err
 				}
-				return logout(e, *revoke)
+				return logout(e, *revoke, *forget)
+			}
+		},
+	},
+	{
+		name:     "profiles",
+		synopsis: "[OPTIONS]",
+		summary:  "list the saved profiles",
+		about: `
+List the profiles: name, server, the user of the last login, and whether
+a token is saved. '*' marks the profile used when none is named (the
+current one, or STOPAN_PROFILE). Add one with 'stopan login -P NAME',
+switch with 'stopan use NAME', remove with 'stopan logout -P NAME
+--forget'.`,
+		permute: true,
+		setup: func(f *flagDefs) action {
+			return func(e env, args []string) error {
+				if err := noArgs(args); err != nil {
+					return err
+				}
+				return listProfiles(e)
+			}
+		},
+	},
+	{
+		name:     "use",
+		synopsis: "NAME",
+		summary:  "make a profile the current one",
+		about:    "Make the profile NAME the current one, used when no -P option and no STOPAN_PROFILE is given.",
+		permute:  true,
+		setup: func(f *flagDefs) action {
+			return func(e env, args []string) error {
+				if len(args) != 1 {
+					return usagef("give one profile name")
+				}
+				return useProfile(e, args[0])
 			}
 		},
 	},
@@ -730,11 +770,22 @@ func findOrg(me api.Me, org string) (int64, error) {
 
 // client loads the config and returns an API client.
 func client() (*api.Client, error) {
-	cfg, err := config.Load()
+	c, _, err := connect()
+	return c, err
+}
+
+// connect loads the chosen profile (see profile) and returns an API
+// client for it with the profile's name.
+func connect() (*api.Client, string, error) {
+	p, name, err := config.Load(profile)
 	if err != nil {
-		return nil, err
+		return nil, name, err
 	}
-	return api.New(cfg.URL, cfg.Token, "stopan-cli/"+version)
+	c, err := api.New(p.URL, p.Token, "stopan-cli/"+version)
+	if err != nil {
+		return nil, name, fmt.Errorf("profile %s: %w", name, err)
+	}
+	return c, name, nil
 }
 
 // body is the text of a ticket or a comment: the arguments, else
@@ -766,15 +817,19 @@ func nonEmpty(s string) (string, error) {
 }
 
 func login(e env, server string, tokenStdin bool) error {
-	saved, err := config.FileOnly()
+	f, err := config.Read()
 	if err != nil {
 		return err
 	}
+	name := f.Choose(profile)
+	if err := config.ValidName(name); err != nil {
+		return usageError(err.Error())
+	}
 	in := bufio.NewReader(e.in)
 	if server == "" {
-		def := saved.URL
-		if def == "" {
-			def = defaultURL
+		def := defaultURL
+		if saved := f.Profiles[name]; saved != nil && saved.URL != "" {
+			def = saved.URL
 		}
 		if tokenStdin {
 			server = def
@@ -805,11 +860,13 @@ func login(e env, server string, tokenStdin bool) error {
 	if err != nil {
 		return fmt.Errorf("checking the token with %s: %w", base, err)
 	}
-	path, err := config.Save(config.Config{URL: base, Token: token})
+	f.Profiles[name] = &config.Profile{URL: base, Token: token, User: fmt.Sprintf("%s (%s)", me.Name, me.Role)}
+	f.Current = name
+	path, err := f.Save()
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(e.out, "logged in to %s as %s (%s); saved in %s\n", base, me.Name, me.Role, path)
+	fmt.Fprintf(e.out, "logged in to %s as %s (%s); profile %s, saved in %s\n", base, me.Name, me.Role, name, path)
 	return nil
 }
 
@@ -842,10 +899,15 @@ func checkToken(s string) (string, error) {
 	return s, nil
 }
 
-func logout(e env, revoke bool) error {
-	saved, err := config.FileOnly()
+func logout(e env, revoke, forget bool) error {
+	f, err := config.Read()
 	if err != nil {
 		return err
+	}
+	name := f.Choose(profile)
+	p := f.Profiles[name]
+	if p == nil {
+		return fmt.Errorf("no profile %q; see 'stopan profiles'", name)
 	}
 	if revoke {
 		c, err := client()
@@ -857,17 +919,77 @@ func logout(e env, revoke bool) error {
 		}
 		fmt.Fprintln(e.out, "revoked the token on", c.Base)
 	}
-	if saved.Token == "" {
-		fmt.Fprintln(e.out, "no saved token")
+	switch {
+	case forget:
+		f.Remove(name)
+		fmt.Fprintf(e.out, "removed profile %s\n", name)
+		if f.Current != "" {
+			fmt.Fprintf(e.out, "current profile: %s\n", f.Current)
+		}
+	case p.Token == "":
+		fmt.Fprintf(e.out, "profile %s has no saved token\n", name)
 		return nil
+	default:
+		p.Token = ""
+		fmt.Fprintf(e.out, "removed the token of profile %s\n", name)
 	}
-	saved.Token = ""
-	if _, err := config.Save(saved); err != nil {
+	if _, err := f.Save(); err != nil {
 		return err
 	}
-	fmt.Fprintln(e.out, "removed the saved token")
 	if os.Getenv("STOPAN_TOKEN") != "" {
 		fmt.Fprintln(e.out, "STOPAN_TOKEN is still set in the environment")
+	}
+	return nil
+}
+
+func listProfiles(e env) error {
+	f, err := config.Read()
+	if err != nil {
+		return err
+	}
+	if len(f.Profiles) == 0 {
+		fmt.Fprintln(e.out, "no profiles; run 'stopan login'")
+		return nil
+	}
+	using := f.Choose("")
+	tw := tabwriter.NewWriter(e.out, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(tw, " \tPROFILE\tSERVER\tUSER\tTOKEN")
+	for _, n := range f.Names() {
+		p := f.Profiles[n]
+		mark, token := " ", "saved"
+		if n == using {
+			mark = "*"
+		}
+		if p.Token == "" {
+			token = "none"
+		}
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\n", mark, n, orDash(p.URL), orDash(p.User), token)
+	}
+	if err := tw.Flush(); err != nil {
+		return err
+	}
+	if env := os.Getenv("STOPAN_PROFILE"); env != "" {
+		fmt.Fprintf(e.out, "STOPAN_PROFILE=%s chooses the profile\n", env)
+	}
+	return nil
+}
+
+func useProfile(e env, name string) error {
+	f, err := config.Read()
+	if err != nil {
+		return err
+	}
+	p := f.Profiles[name]
+	if p == nil {
+		return fmt.Errorf("no profile %q; add it with 'stopan login -P %s'", name, name)
+	}
+	f.Current = name
+	if _, err := f.Save(); err != nil {
+		return err
+	}
+	fmt.Fprintf(e.out, "now using profile %s (%s)\n", name, p.URL)
+	if env := os.Getenv("STOPAN_PROFILE"); env != "" && env != name {
+		fmt.Fprintf(e.out, "STOPAN_PROFILE=%s still wins while it is set\n", env)
 	}
 	return nil
 }

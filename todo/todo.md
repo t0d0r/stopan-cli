@@ -28,6 +28,10 @@
 - [ ] check stopan update end to end after the second release (binary,
       deb, homebrew) (specs/update.md)
 
+- [x] profiles: several servers or accounts in one config, -P, profiles,
+      use, logout --forget, STOPAN_PROFILE (specs/auth.md)
+- [ ] release v0.2.0 with profiles and the list views (specs/release.md)
+
 ## Later
 
 - [ ] attachments: upload with new/reply (`--file`), download
@@ -39,7 +43,6 @@
 - [ ] staff extras: reports, stages, people profiles, deleted tickets
 - [ ] admin commands: users, organizations, memberships, settings,
       messages
-- [ ] several servers (profiles) in one config
 - [ ] shell completions (bash, zsh, fish)
 - [ ] dashboard: mouse, the board by stages, filters by priority and
       assignee

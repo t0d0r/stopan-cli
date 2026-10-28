@@ -26,7 +26,8 @@ the server repository.
 
 ## Scope (v0.1)
 
-- Account: `login`, `logout`, `me`, `tokens`, `revoke` (auth.md).
+- Account: `login`, `logout`, `me`, `tokens`, `revoke`, and profiles
+  for several servers or accounts: `profiles`, `use`, `-P` (auth.md).
 - Tickets: `list`, `show`, `new`, `reply`, `note`, `set`, `done`, `open`
   (cli.md).
 - Notifications: `notifications`, `read`.
@@ -42,7 +43,6 @@ the server repository.
 - Staff extras: reports, stages, people profiles, deleted tickets.
 - Admin endpoints: users, organizations, memberships, settings,
   messages.
-- Several servers (profiles) in one config.
 
 ## Decisions
 

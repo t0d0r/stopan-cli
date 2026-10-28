@@ -42,7 +42,19 @@ stopan me
 ```
 
 The token is saved in `~/.config/stopan/config.json` (mode 0600).
-`STOPAN_URL` and `STOPAN_TOKEN` override it, for scripts and CI.
+
+Several servers or accounts are profiles:
+
+```sh
+stopan login -P dev          # log in to a second server as the profile "dev"
+stopan profiles              # list them; * marks the one in use
+stopan use dev               # switch
+stopan -P prod list          # one command with another profile
+stopan logout -P dev --forget
+```
+
+`STOPAN_PROFILE` chooses a profile; `STOPAN_URL` and `STOPAN_TOKEN`
+override its server and token, for scripts and CI.
 
 ## Use
 
