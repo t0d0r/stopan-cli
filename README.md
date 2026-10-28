@@ -49,7 +49,9 @@ The token is saved in `~/.config/stopan/config.json` (mode 0600).
 ```sh
 stopan                                   # dashboard
 stopan list                              # the queue (staff) or My tickets
-stopan list -v mine -s open printer      # view, status and a search
+stopan list all                          # a view: unsolved (default), mine, unassigned,
+                                         # pending, postponed, done, all
+stopan list mine -s open printer         # view, status and a search
 stopan show 1001
 stopan reply 1001 "On my way."           # or from stdin, or in $EDITOR
 stopan note 1001                         # internal note (staff), in $EDITOR

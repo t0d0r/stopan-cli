@@ -84,3 +84,15 @@ Next step: create the public repository, push main and v0.1.0, publish
 the release with bin/dist/*, then put the archive's sha256 in
 packaging/homebrew/stopan-cli.rb and the tap (specs/release.md, Steps
 4-6).
+
+## list VIEW
+
+- `stopan list all` works like `stopan list --view all`: a first word
+  that is a view name is the view, the rest is the search; `-q/--search`
+  searches for a word that is also a view name; `-v` wins over the word
+  (specs/cli.md "list"). Reason: `list` showed only the default
+  `unsolved` view (new, open, pending), and switching views needed `-v`.
+- Checked against the local dev server: `list all` 43 tickets on two
+  pages, `list postponed` 9.
+- The v0.1.0 tag was not published yet, so it moves to the commit with
+  this change and the release files are built again.

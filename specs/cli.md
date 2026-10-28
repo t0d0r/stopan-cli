@@ -25,7 +25,7 @@ API errors print `stopan: CODE: MESSAGE`, with validation details
 | `login` | | `GET /me` | auth.md |
 | `logout` | | `GET /tokens`, `DELETE /tokens/:id` | auth.md |
 | `me` | `whoami` | `GET /me` | server, user, username, email, role, language, organizations |
-| `list [SEARCH...]` | `ls`, `tickets` | `GET /tickets` | see below |
+| `list [VIEW] [SEARCH...]` | `ls`, `tickets` | `GET /tickets` | see below |
 | `show TICKET` | `view`, `cat` | `GET /tickets/:n` | fields, request text, timeline |
 | `new --subject S [TEXT...]` | `create` | `POST /tickets` | see below |
 | `reply TICKET [TEXT...]` | | `POST /tickets/:n/comments` | public reply |
@@ -41,7 +41,18 @@ API errors print `stopan: CODE: MESSAGE`, with validation details
 
 ## list
 
-Options: `-v/--view`, `-s/--status`, `-p/--priority`, `-a/--assignee`
+`stopan list all` is `stopan list --view all`: when `--view` is not
+given and the first word after the options is a view name (staff:
+unsolved, mine, unassigned, pending, postponed, done, all; requesters:
+open, done, all), it is the view. The other words are the search. To
+search for a view's name, use `-q/--search TEXT`, which is joined in
+front of the remaining words. A view the user does not have is left to
+the server, which then uses its default view.
+
+Decision: a view as a plain word, not only `-v`. Reason: switching views
+is the most common use of `list`; `-v` stays for scripts.
+
+Options: `-v/--view`, `-q/--search`, `-s/--status`, `-p/--priority`, `-a/--assignee`
 (`me`, `none` or a user id), `-o/--org ID`, `--sort`
 (`updated|created|priority`), `--page N`. Words after the options are
 the search (`q`). Status, priority and sort names are checked before the
@@ -108,7 +119,10 @@ status is 1 when any failed.
 
 ## Acceptance
 
-CLI tests against a fake API (cli_test.go): list query and table, show
+CLI tests against a fake API (cli_test.go): list query and table, a
+view as the first word (`list all`, `list done printer jam`), `--search`
+for a view's name, `-v` taking precedence (`list -v mine all` searches
+"all"), show
 text and `--json`, `whoami`, reply from arguments with `--status`, note
 from standard input with `internal: true`, `set -a me -p urgent` body,
 `done` as staff, `new` with an organization name and `-a me`, a wrong

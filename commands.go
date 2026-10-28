@@ -148,12 +148,14 @@ everywhere.`,
 	{
 		name:     "list",
 		aliases:  []string{"ls", "tickets"},
-		synopsis: "[OPTIONS] [SEARCH...]",
+		synopsis: "[OPTIONS] [VIEW] [SEARCH...]",
 		summary:  "list tickets, as the queue or My tickets",
 		about: `
 List tickets as the queue shows them (staff) or as "My tickets"
-(requesters), 25 a page, newest change first. Words after the options
-search the subject and text, or find a ticket number.
+(requesters), 25 a page, newest change first. A first word that names a
+view chooses it ('stopan list all'); the other words search the subject
+and text, or find a ticket number. To search for a view's name, use
+--search ('stopan list --search done').
 
 Views for staff: unsolved (default), mine, unassigned, pending,
 postponed, done, all. For requesters: open (default), done, all.
@@ -163,6 +165,7 @@ Assignee (staff): me, none, or a user id.`,
 		permute: true,
 		setup: func(f *flagDefs) action {
 			view := f.String("v", "view", "VIEW", "", "queue view")
+			search := f.String("q", "search", "TEXT", "", "search the subject and text, or find a number")
 			status := f.String("s", "status", "STATUS", "", "only this status")
 			prio := f.String("p", "priority", "PRIORITY", "", "only this priority")
 			assignee := f.String("a", "assignee", "WHO", "", "only tickets of me, none, or a user id")
@@ -171,6 +174,9 @@ Assignee (staff): me, none, or a user id.`,
 			page := f.Int("", "page", "N", 1, "page number")
 			asJSON := f.Bool("j", "json", "print the API answer as JSON")
 			return func(e env, args []string) error {
+				if len(args) > 0 && *view == "" && isView(args[0]) {
+					*view, args = args[0], args[1:]
+				}
 				if err := oneOf("status", *status, api.Statuses); err != nil {
 					return err
 				}
@@ -185,7 +191,8 @@ Assignee (staff): me, none, or a user id.`,
 					return err
 				}
 				l, raw, err := c.Tickets(api.ListFilter{View: *view, Status: *status, Priority: *prio,
-					Assignee: *assignee, Organization: *org, Sort: *sort, Page: *page, Query: strings.Join(args, " ")})
+					Assignee: *assignee, Organization: *org, Sort: *sort, Page: *page,
+					Query: strings.TrimSpace(strings.Join(append([]string{*search}, args...), " "))})
 				if err != nil {
 					return err
 				}
@@ -622,6 +629,12 @@ func oneOf(name, v string, allowed []string) error {
 		return usagef("%s must be one of %s", name, strings.Join(allowed, ", "))
 	}
 	return nil
+}
+
+// isView tells whether s names a view of staff or of requesters; the
+// server falls back to its default for a view the user does not have.
+func isView(s string) bool {
+	return slices.Contains(api.StaffViews, s) || slices.Contains(api.RequesterView, s)
 }
 
 func ticketNumber(s string) (int64, error) {

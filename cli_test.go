@@ -101,6 +101,18 @@ func TestListShowMe(t *testing.T) {
 	if got := f.reqs[0]; got != "GET /api/v1/tickets?q=printer&view=mine" {
 		t.Errorf("request = %s", got)
 	}
+	for args, want := range map[string]string{
+		"list all":                      "GET /api/v1/tickets?view=all",
+		"list done printer jam":         "GET /api/v1/tickets?q=printer+jam&view=done",
+		"list --search done":            "GET /api/v1/tickets?q=done",
+		"list -v mine all":              "GET /api/v1/tickets?q=all&view=mine",
+		"list -q printer postponed jam": "GET /api/v1/tickets?q=printer+jam&view=postponed",
+	} {
+		f.reqs = nil
+		if code, _, errs := runCLI(t, "", strings.Fields(args)...); code != 0 || len(f.reqs) != 1 || f.reqs[0] != want {
+			t.Errorf("%s: exit %d %q, requests %v, want %s", args, code, errs, f.reqs, want)
+		}
+	}
 	code, out, _ = runCLI(t, "", "show", "#1001")
 	if code != 0 || !strings.Contains(out, "It smokes.") || !strings.Contains(out, "Ben replied") {
 		t.Errorf("show: %d %q", code, out)
