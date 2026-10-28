@@ -21,15 +21,16 @@
 - [ ] try against the real server with a real token: login, list, show,
       reply in a test ticket, the dashboard in a real terminal (light and
       dark theme, 80 columns)
-- [ ] create the public GitHub repository t0d0r/stopan-cli and push
-      (only when asked) (specs/release.md)
-- [ ] first release v0.1.0: tag, make dist, make deb, gh release,
+- [x] create the public GitHub repository t0d0r/stopan-cli and push
+      (specs/release.md)
+- [x] first release v0.1.0: tag, make dist, make deb, gh release,
       formula in t0d0r/homebrew-tap (specs/release.md)
 - [ ] check stopan update end to end after the second release (binary,
       deb, homebrew) (specs/update.md)
 
 - [x] profiles: several servers or accounts in one config, -P, profiles,
       use, logout --forget, STOPAN_PROFILE (specs/auth.md)
+- [x] views in the list help; `stopan list VIEW` (specs/cli.md)
 - [ ] release v0.2.0 with profiles and the list views (specs/release.md)
 
 ## Later
