@@ -68,3 +68,19 @@ Log in to the real server with a read-only token and try list, show and
 the dashboard; then a read-and-write token on a test ticket for reply,
 note and set. After that, create the GitHub repository and cut v0.1.0
 (specs/release.md).
+
+## Release v0.1.0 (in progress)
+
+- make check passes; annotated tag v0.1.0 on 0dfb5d8; make dist and
+  make deb VERSION=v0.1.0 on the tag: four tarballs, two .deb files and
+  SHA256SUMS in bin/dist. gitleaks over the history: no leaks.
+- The arm64 .deb installs in debian:latest (Version 0.1.0, Recommends
+  ca-certificates); `stopan --version` prints v0.1.0, an unknown command
+  exits 2, plain http to a remote host is refused.
+- Not done yet: the GitHub repository t0d0r/stopan-cli, pushing main
+  and the tag, the GitHub release, the formula in t0d0r/homebrew-tap.
+
+Next step: create the public repository, push main and v0.1.0, publish
+the release with bin/dist/*, then put the archive's sha256 in
+packaging/homebrew/stopan-cli.rb and the tap (specs/release.md, Steps
+4-6).
