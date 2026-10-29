@@ -104,3 +104,10 @@ token.
 - By hand after the first two releases: a binary built as the older
   release updates itself; `--check` on a current version says it is up
   to date; a dev build refuses; `brew upgrade` through the tap.
+
+Checked from the published v0.1.0 to v0.2.0: binary method from the
+darwin-arm64 tarball in a temporary directory; deb method as root in
+debian:latest (arm64), apt unpacked 0.2.0 over 0.1.0; homebrew method on
+macOS (`stopan update -y` ran brew upgrade, brew test passes). Right
+after publishing, releases/latest still answered v0.1.0 to stopan for
+about 40 seconds while curl already got v0.2.0, as seen with lazyai.

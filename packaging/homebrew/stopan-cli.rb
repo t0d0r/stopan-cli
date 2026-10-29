@@ -1,8 +1,8 @@
 class StopanCli < Formula
   desc "Command-line tool and terminal UI for the Stopan service desk"
   homepage "https://github.com/t0d0r/stopan-cli"
-  url "https://github.com/t0d0r/stopan-cli/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "e1ee2d19313b316101ba566d362e49ac94a803a2c5eadfd339e34ccaf7b09364"
+  url "https://github.com/t0d0r/stopan-cli/archive/refs/tags/v0.2.0.tar.gz"
+  sha256 "30a6862ea0fe1931fc6e199525f081e187e92b853ea04996b422343b2dedbee6"
   license "BSD-2-Clause"
   head "https://github.com/t0d0r/stopan-cli.git", branch: "main"
 
