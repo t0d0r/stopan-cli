@@ -36,8 +36,8 @@
 - [x] shell completions for bash, zsh and fish, installed by brew, the
       .deb and the tarballs (specs/completion.md)
 - [x] README section "Why Stopan?"
-- [ ] release v0.3.0 with the completions; the formula in the tap gets
-      generate_completions_from_executable only then (specs/release.md)
+- [x] release v0.3.0 with the completions and the formula that installs
+      them (specs/release.md)
 
 ## Later
 

@@ -50,3 +50,26 @@ specs/{completion,cli,release,overview,README}.md, todo/todo.md.
 
 Release v0.3.0 (specs/release.md), with the formula's completions, and
 check `brew install` puts the three scripts in place.
+
+## Release v0.3.0
+
+- make check passes; README install examples name v0.3.0; annotated tag
+  v0.3.0; make dist and make deb VERSION=v0.3.0 on the tag (tarballs
+  with completions/); gitleaks: no leaks. Pushed main and the tag.
+- GitHub release v0.3.0 with four tarballs, two .deb files and
+  SHA256SUMS; all six pass the checksum check after download.
+- Homebrew: formula 0.3.0 in t0d0r/homebrew-tap with
+  generate_completions_from_executable (source archive sha256
+  abc763343d87f34afeafed24b94767b68c56d7f7e4cce73bb52b887c4622976b);
+  brew style and audit --strict pass; pushed. `stopan update -y` on
+  macOS ran brew upgrade 0.2.0 -> 0.3.0; brew test passes (it checks the
+  bash script); brew linked etc/bash_completion.d/stopan,
+  share/zsh/site-functions/_stopan and
+  share/fish/vendor_completions.d/stopan.fish.
+- A fresh fish completes `stopan use <TAB>` with the saved profile,
+  `stopan list -v p` with pending and postponed, and `stopan li` with
+  list, from the brew-installed script.
+- The open item above (formula without completions) is closed.
+
+Next step: use stopan against the production server with a read-only
+token; then the next feature from todo/todo.md Later (attachments).
