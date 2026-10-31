@@ -26,7 +26,7 @@ Or download a static binary or a .deb from the
 `x86_64` is amd64, `aarch64` is arm64):
 
 ```sh
-V=v0.2.0 A=linux-amd64
+V=v0.3.0 A=linux-amd64
 curl -LO https://github.com/t0d0r/stopan-cli/releases/download/$V/stopan-cli-$V-$A.tar.gz
 curl -LO https://github.com/t0d0r/stopan-cli/releases/download/$V/SHA256SUMS
 sha256sum -c SHA256SUMS --ignore-missing
