@@ -10,11 +10,13 @@ class StopanCli < Formula
 
   def install
     system "go", "build", *std_go_args(output: bin/"stopan", ldflags: "-s -w -X main.version=#{version}")
+    generate_completions_from_executable(bin/"stopan", "completion")
   end
 
   test do
     assert_match "stopan #{version}", shell_output("#{bin}/stopan --version")
     assert_match "Usage: stopan", shell_output("#{bin}/stopan --help")
     assert_match "unknown command", shell_output("#{bin}/stopan nope 2>&1", 2)
+    assert_match "complete -F _stopan stopan", shell_output("#{bin}/stopan completion bash")
   end
 end

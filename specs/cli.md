@@ -30,7 +30,7 @@ API errors print `stopan: CODE: MESSAGE`, with validation details
 | `tui` | | | dashboard; `-r/--refresh DURATION` (default 1m, 0 off) |
 | `login` | | `GET /me` | auth.md |
 | `logout` | | `GET /tokens`, `DELETE /tokens/:id` | auth.md; `--forget` removes the profile |
-| `profiles` | | | list the profiles, `*` on the one in use (auth.md) |
+| `profiles` | | | list the profiles, `*` on the one in use; `-n/--names` only the names (auth.md) |
 | `use NAME` | | | make a profile current (auth.md) |
 | `me` | `whoami` | `GET /me` | server, user, username, email, role, language, organizations |
 | `list [VIEW] [SEARCH...]` | `ls`, `tickets` | `GET /tickets` | see below |
@@ -46,6 +46,7 @@ API errors print `stopan: CODE: MESSAGE`, with validation details
 | `tokens` | | `GET /tokens` | auth.md |
 | `revoke ID...` | | `DELETE /tokens/:id` | auth.md |
 | `update` | | GitHub | update.md |
+| `completion SHELL` | | | completion script for bash, zsh or fish (completion.md) |
 
 ## list
 

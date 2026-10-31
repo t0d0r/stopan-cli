@@ -34,6 +34,7 @@ the server repository.
 - Dashboard: `stopan` with no command (tui.md).
 - Self-update: `update` (update.md); release tarballs, .deb and the
   Homebrew formula (release.md).
+- Shell completion for bash, zsh and fish: `completion` (completion.md).
 
 ## Not yet (later items in todo/todo.md)
 

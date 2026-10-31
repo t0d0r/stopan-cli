@@ -6,6 +6,15 @@ answers and changes tickets, and reads notifications, through the
 server's JSON API with your personal token. One static binary for macOS
 and Linux.
 
+## Why Stopan?
+
+"Stopan" (Стопан) comes from Bulgarian folklore, where it represents a
+guardian spirit that protects the home and its inhabitants.
+
+The name reflects the application's role as a Service Desk - a central
+point for support, incident management, and service requests, helping
+maintain stability, reliability, and continuity of IT services.
+
 ## Install
 
 ```sh
@@ -76,6 +85,20 @@ stopan list --json | jq '.tickets[].number'
 
 `stopan help` lists every command; `stopan help COMMAND` shows its
 options.
+
+## Shell completion
+
+Homebrew and the .deb install completions for bash, zsh and fish. From
+a tarball or a source build, add them yourself:
+
+```sh
+stopan completion fish > ~/.config/fish/completions/stopan.fish
+stopan completion zsh > "${fpath[1]}/_stopan"     # then restart zsh
+echo 'source <(stopan completion bash)' >> ~/.bashrc
+```
+
+They complete commands, options, views (`stopan list <TAB>`), statuses,
+priorities and your profile names (`stopan -P <TAB>`).
 
 Dashboard keys: `tab` or `1`-`7` views, `j`/`k` move, `enter` open, `/`
 search, `n` notifications, `R` reply, `N` note, `S` status, `P`

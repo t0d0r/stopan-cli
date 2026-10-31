@@ -11,7 +11,8 @@ of t0d0r/stopan-cli with:
 
 - `stopan-cli-vX.Y.Z-OS-ARCH.tar.gz` for linux/amd64, linux/arm64,
   darwin/amd64 and darwin/arm64, each with one directory of the same
-  name holding `stopan`, `LICENSE` and `README.md`.
+  name holding `stopan`, `LICENSE`, `README.md` and `completions/`
+  (`stopan.bash`, `_stopan`, `stopan.fish`, from `stopan completion`).
 - `stopan-cli_X.Y.Z_ARCH.deb` for amd64 and arm64.
 - `SHA256SUMS` over all of them, in `sha256sum` format.
 
@@ -21,7 +22,10 @@ paths, tar entries owned by root). `make deb` (after `make dist`, same
 VERSION) wraps each Linux binary in a .deb with `dpkg-deb
 --root-owner-group` in a `debian:latest` container.
 
-Debian package: `stopan-cli`, `/usr/bin/stopan`,
+Debian package: `stopan-cli`, `/usr/bin/stopan`, the completions in
+`/usr/share/bash-completion/completions/stopan`,
+`/usr/share/zsh/vendor-completions/_stopan` and
+`/usr/share/fish/vendor_completions.d/stopan.fish`,
 `/usr/share/doc/stopan-cli/{copyright,changelog.gz}`, a lintian override
 for `statically-linked-binary`; no Depends; Recommends
 `ca-certificates` (HTTPS); Suggests `xdg-utils` (the browser key).
@@ -35,8 +39,10 @@ kept here in `packaging/homebrew/stopan-cli.rb` and copied to
 `sha256` of the tag's source archive
 (`https://github.com/t0d0r/stopan-cli/archive/refs/tags/vX.Y.Z.tar.gz`).
 It builds from source with Go and installs `bin/stopan`, stamped with
-the version; its test checks `--version`, `--help` and the usage error
-exit status 2. It works on macOS and Linux (no `depends_on :macos`, no
+the version, and the completions with
+`generate_completions_from_executable(bin/"stopan", "completion")`; its
+test checks `--version`, `--help`, the usage error exit status 2 and the
+bash completion script. It works on macOS and Linux (no `depends_on :macos`, no
 runtime dependencies).
 
 ## Steps

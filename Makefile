@@ -22,7 +22,11 @@ test: ## run all tests (against a fake API server; no network)
 	$(GO) test ./...
 
 dist: ## build release tarballs and SHA256SUMS into bin/dist
-	@set -e; rm -rf bin/dist; mkdir -p bin/dist; \
+	@set -e; rm -rf bin/dist; mkdir -p bin/dist/.completions; \
+	$(GO) run . completion bash > bin/dist/.completions/stopan.bash; \
+	$(GO) run . completion zsh > bin/dist/.completions/_stopan; \
+	$(GO) run . completion fish > bin/dist/.completions/stopan.fish; \
+	chmod 0644 bin/dist/.completions/*; \
 	case "$$(tar --version)" in \
 		*bsdtar*) own="--uid 0 --gid 0 --uname root --gname root";; \
 		*) own="--owner=0 --group=0 --numeric-owner";; \
@@ -33,9 +37,11 @@ dist: ## build release tarballs and SHA256SUMS into bin/dist
 		GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 $(GO) build -trimpath \
 			-ldflags "-s -w -X main.version=$(VERSION)" -o bin/dist/$$name/stopan .; \
 		cp LICENSE README.md bin/dist/$$name/; \
+		mkdir bin/dist/$$name/completions; cp bin/dist/.completions/* bin/dist/$$name/completions/; \
 		COPYFILE_DISABLE=1 tar $$own -czf bin/dist/$$name.tar.gz -C bin/dist $$name; \
 		rm -rf bin/dist/$$name; \
 	done; \
+	rm -rf bin/dist/.completions; \
 	cd bin/dist; \
 	if command -v sha256sum >/dev/null; then sha256sum *.tar.gz; else shasum -a 256 *.tar.gz; fi > SHA256SUMS; \
 	cat SHA256SUMS
@@ -51,6 +57,12 @@ deb: ## package the linux tarballs in bin/dist as .deb files (needs docker; run 
 		echo "stopan-cli: statically-linked-binary [usr/bin/stopan]" > $$root/usr/share/lintian/overrides/stopan-cli; \
 		tar -xzf $$tgz -O stopan-cli-$(VERSION)-linux-$$arch/stopan > $$root/usr/bin/stopan; \
 		chmod 0755 $$root/usr/bin/stopan; \
+		comp=stopan-cli-$(VERSION)-linux-$$arch/completions; \
+		mkdir -p $$root/usr/share/bash-completion/completions $$root/usr/share/zsh/vendor-completions $$root/usr/share/fish/vendor_completions.d; \
+		tar -xzf $$tgz -O $$comp/stopan.bash > $$root/usr/share/bash-completion/completions/stopan; \
+		tar -xzf $$tgz -O $$comp/_stopan > $$root/usr/share/zsh/vendor-completions/_stopan; \
+		tar -xzf $$tgz -O $$comp/stopan.fish > $$root/usr/share/fish/vendor_completions.d/stopan.fish; \
+		chmod 0644 $$root/usr/share/bash-completion/completions/stopan $$root/usr/share/zsh/vendor-completions/_stopan $$root/usr/share/fish/vendor_completions.d/stopan.fish; \
 		{ echo "Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/"; \
 		  echo "Upstream-Name: stopan-cli"; echo "Source: https://github.com/t0d0r/stopan-cli"; echo; \
 		  echo "Files: *"; echo "License: BSD-2-Clause"; echo; \

@@ -33,6 +33,12 @@
 - [x] views in the list help; `stopan list VIEW` (specs/cli.md)
 - [x] release v0.2.0 with profiles and the list views (specs/release.md)
 
+- [x] shell completions for bash, zsh and fish, installed by brew, the
+      .deb and the tarballs (specs/completion.md)
+- [x] README section "Why Stopan?"
+- [ ] release v0.3.0 with the completions; the formula in the tap gets
+      generate_completions_from_executable only then (specs/release.md)
+
 ## Later
 
 - [ ] attachments: upload with new/reply (`--file`), download
@@ -44,6 +50,5 @@
 - [ ] staff extras: reports, stages, people profiles, deleted tickets
 - [ ] admin commands: users, organizations, memberships, settings,
       messages
-- [ ] shell completions (bash, zsh, fish)
 - [ ] dashboard: mouse, the board by stages, filters by priority and
       assignee

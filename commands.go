@@ -122,11 +122,12 @@ switch with 'stopan use NAME', remove with 'stopan logout -P NAME
 --forget'.`,
 		permute: true,
 		setup: func(f *flagDefs) action {
+			names := f.Bool("n", "names", "print only the names, one a line (for scripts and completion)")
 			return func(e env, args []string) error {
 				if err := noArgs(args); err != nil {
 					return err
 				}
-				return listProfiles(e)
+				return listProfiles(e, *names)
 			}
 		},
 	},
@@ -942,10 +943,16 @@ func logout(e env, revoke, forget bool) error {
 	return nil
 }
 
-func listProfiles(e env) error {
+func listProfiles(e env, namesOnly bool) error {
 	f, err := config.Read()
 	if err != nil {
 		return err
+	}
+	if namesOnly {
+		for _, n := range f.Names() {
+			fmt.Fprintln(e.out, n)
+		}
+		return nil
 	}
 	if len(f.Profiles) == 0 {
 		fmt.Fprintln(e.out, "no profiles; run 'stopan login'")

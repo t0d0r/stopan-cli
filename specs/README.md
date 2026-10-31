@@ -4,6 +4,7 @@
 - `auth.md` - server URL, personal token, config file, login and logout
 - `cli.md` - commands, options, output, texts from args, stdin or editor
 - `tui.md` - dashboard layout, screens, keys, confirmations
+- `completion.md` - bash, zsh and fish completion scripts and how they are installed
 - `update.md` - `stopan update`: find, check and install the latest release
 - `release.md` - tarballs, .deb, Homebrew formula, release steps
 
